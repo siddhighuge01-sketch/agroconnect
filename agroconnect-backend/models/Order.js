@@ -29,6 +29,10 @@ const orderSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  commissionRate: {
+  type: Number,
+  required: true
+},
   status: {
     type: String,
     enum: ['pending', 'confirmed', 'out_for_delivery', 'delivered'],
