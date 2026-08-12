@@ -5,10 +5,8 @@ import ProductDetail from './pages/ProductDetail';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
-import { useAuth } from './context/AuthContext';
 import Admin from './pages/Admin';
-// ...
-<Route path="/admin" element={<Admin />} />
+import { useAuth } from './context/AuthContext';
 
 function Nav() {
   const { user, logout } = useAuth();
@@ -29,7 +27,7 @@ function Nav() {
     }}>
       <Link to="/" style={{ textDecoration: 'none' }}>
         <h2 style={{ color: 'var(--turmeric)', fontSize: '1.5rem', margin: 0 }}>
-          🌾 AgroConnect
+          AgroConnect
         </h2>
       </Link>
       <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
@@ -75,12 +73,11 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/products" element={<Products />} />
           <Route path="/products/:id" element={<ProductDetail />} />
-         <Route path="/login" element={<Login />} />
-         <Route path="/register" element={<Register />} />
-         <Route path="/dashboard" element={<Dashboard />} />
-         <Route path="/admin" element={<Admin />} />
-         </Routes>
-        
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/admin" element={<Admin />} />
+        </Routes>
       </div>
     </BrowserRouter>
   );

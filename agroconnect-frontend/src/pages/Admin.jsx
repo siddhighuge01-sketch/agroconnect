@@ -32,11 +32,11 @@ function Admin() {
 
       <div className="stat-grid" style={{ marginTop: '1.5rem' }}>
         <div className="stat-card">
-          <div className="stat-number">₹{stats.totalCommission.toFixed(0)}</div>
+          <div className="stat-number">Rs.{stats.totalCommission.toFixed(0)}</div>
           <div className="stat-label">Commission Earned</div>
         </div>
         <div className="stat-card">
-          <div className="stat-number">₹{stats.totalRevenue}</div>
+          <div className="stat-number">Rs.{stats.totalRevenue.toFixed(0)}</div>
           <div className="stat-label">Total Order Value</div>
         </div>
         <div className="stat-card">
@@ -56,6 +56,62 @@ function Admin() {
           <div className="stat-label">Buyers</div>
         </div>
       </div>
+
+      <FeaturedManager />
+      <AbandonedScan />
+    </div>
+  );
+}
+
+function FeaturedManager() {
+  const [products, setProducts] = useState([]);
+  const token = localStorage.getItem('token');
+
+  const load = () => axios.get('http://localhost:5000/api/products').then(res => setProducts(res.data));
+  useEffect(() => { load(); }, []);
+
+  const toggle = async (id) => {
+    await axios.patch(`http://localhost:5000/api/products/${id}/feature`, {}, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    load();
+  };
+
+  return (
+    <div style={{ padding: '0 2rem 2rem' }}>
+      <h3 style={{ color: 'var(--forest)' }}>Manage Featured Listings</h3>
+      {products.map(p => (
+        <div className="listing-row" key={p._id}>
+          <span>{p.name} — Rs.{p.price}/{p.unit}</span>
+          <button
+            className="btn-primary"
+            style={{ padding: '5px 12px', background: p.isFeatured ? 'var(--leaf)' : 'var(--soil)' }}
+            onClick={() => toggle(p._id)}
+          >
+            {p.isFeatured ? 'Featured ✓' : 'Feature it'}
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function AbandonedScan() {
+  const [result, setResult] = useState(null);
+
+  const runScan = async () => {
+    const token = localStorage.getItem('token');
+    const res = await axios.post('http://localhost:5000/api/admin/abandoned-scan', {}, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    setResult(res.data);
+  };
+
+  return (
+    <div style={{ padding: '0 2rem 2rem' }}>
+      <h3 style={{ color: 'var(--forest)' }}>Abandoned Cart Scan</h3>
+      <button className="btn-primary" onClick={runScan}>Run abandoned order scan</button>
+      {result && <p style={{ marginTop: '1rem', color: 'var(--soil)' }}>{result.triggered} reminder(s) triggered.</p>}
     </div>
   );
 }

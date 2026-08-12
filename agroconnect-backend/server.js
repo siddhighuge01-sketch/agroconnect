@@ -23,6 +23,12 @@ app.use('/api/orders', orderRoutes);
 const adminRoutes = require('./routes/adminRoutes');
 app.use('/api/admin', adminRoutes);
 
+const couponRoutes = require('./routes/couponRoutes');
+app.use('/api/coupons', couponRoutes);
+
+const referralRoutes = require('./routes/referralRoutes');
+app.use('/api/referral', referralRoutes);
+
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected successfully'))
   .catch((err) => console.error('MongoDB connection error:', err));
@@ -34,6 +40,22 @@ app.get('/', (req, res) => {
 app.get('/api/ping', (req, res) => {
   res.json({ message: 'Hello from AgroConnect backend!' });
 });
+
+// Abandoned cart / re-engagement scan — runs every 30 minutes
+const Order = require('./models/Order');
+setInterval(async () => {
+  try {
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    const stale = await Order.find({ status: 'pending', reminderSent: false, createdAt: { $lte: twoHoursAgo } });
+    for (const order of stale) {
+      console.log(`[AUTO REMINDER] Order ${order._id} is stale, marking reminder sent`);
+      order.reminderSent = true;
+      await order.save();
+    }
+  } catch (err) {
+    console.error('Abandoned cart scan error:', err.message);
+  }
+}, 30 * 60 * 1000);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

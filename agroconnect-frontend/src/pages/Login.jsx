@@ -36,31 +36,12 @@ function Login() {
 
       <form onSubmit={handleSubmit}>
         <label className="form-label">Email</label>
-        <input
-          className="form-input"
-          type="email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-        />
+        <input className="form-input" type="email" name="email" value={formData.email} onChange={handleChange} required />
 
         <label className="form-label">Password</label>
-        <input
-          className="form-input"
-          type="password"
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-        />
+        <input className="form-input" type="password" name="password" value={formData.password} onChange={handleChange} required />
 
-        <button
-          type="submit"
-          className="btn-primary"
-          style={{ marginTop: '1.5rem', width: '100%' }}
-          disabled={loading}
-        >
+        <button type="submit" className="btn-primary" style={{ marginTop: '1.5rem', width: '100%' }} disabled={loading}>
           {loading && <span className="spinner"></span>}
           {loading ? 'Logging in...' : 'Login'}
         </button>

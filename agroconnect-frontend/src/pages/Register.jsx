@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 
 function Register() {
+  const [searchParams] = useSearchParams();
+  const refCode = searchParams.get('ref') || '';
+
   const [formData, setFormData] = useState({
-    name: '', email: '', password: '', role: 'farmer', location: '', phone: ''
+    name: '', email: '', password: '', role: 'farmer', location: '', phone: '', referralCode: refCode
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -55,12 +58,10 @@ function Register() {
         <label className="form-label">Phone (optional)</label>
         <input className="form-input" name="phone" value={formData.phone} onChange={handleChange} />
 
-        <button
-          type="submit"
-          className="btn-primary"
-          style={{ marginTop: '1.5rem', width: '100%' }}
-          disabled={loading}
-        >
+        <label className="form-label">Referral code (optional)</label>
+        <input className="form-input" name="referralCode" value={formData.referralCode} onChange={handleChange} />
+
+        <button type="submit" className="btn-primary" style={{ marginTop: '1.5rem', width: '100%' }} disabled={loading}>
           {loading && <span className="spinner"></span>}
           {loading ? 'Creating account...' : 'Create account'}
         </button>
