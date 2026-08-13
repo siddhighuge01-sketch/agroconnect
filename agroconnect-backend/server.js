@@ -29,6 +29,9 @@ app.use('/api/coupons', couponRoutes);
 const referralRoutes = require('./routes/referralRoutes');
 app.use('/api/referral', referralRoutes);
 
+const reviewRoutes = require('./routes/reviewRoutes');
+app.use('/api/reviews', reviewRoutes);
+
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected successfully'))
   .catch((err) => console.error('MongoDB connection error:', err));

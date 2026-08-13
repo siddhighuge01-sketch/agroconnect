@@ -17,6 +17,7 @@ function ProductDetail() {
 
   const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
+  const [deliveryAddress, setDeliveryAddress] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [placing, setPlacing] = useState(false);
@@ -25,11 +26,21 @@ function ProductDetail() {
   const [discount, setDiscount] = useState(0);
   const [couponMsg, setCouponMsg] = useState('');
 
+  const [farmerRating, setFarmerRating] = useState(null);
+
   useEffect(() => {
     axios.get(`http://localhost:5000/api/products/${id}`)
       .then(res => setProduct(res.data))
       .catch(() => setError('Product not found'));
   }, [id]);
+
+  useEffect(() => {
+    if (product?.farmerId?._id) {
+      axios.get(`http://localhost:5000/api/reviews/farmer/${product.farmerId._id}`)
+        .then(res => setFarmerRating(res.data))
+        .catch(() => setFarmerRating(null));
+    }
+  }, [product]);
 
   const applyCoupon = async () => {
     setCouponMsg('');
@@ -60,13 +71,22 @@ function ProductDetail() {
       setError('Only buyers can place orders');
       return;
     }
+    if (deliveryAddress.trim().length < 10) {
+      setError('Please enter a complete delivery address');
+      return;
+    }
 
     setPlacing(true);
     try {
       const token = localStorage.getItem('token');
       const res = await axios.post(
         'http://localhost:5000/api/orders',
-        { productId: id, quantity: Number(quantity), couponCode: couponCode || undefined },
+        {
+          productId: id,
+          quantity: Number(quantity),
+          couponCode: couponCode || undefined,
+          deliveryAddress
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setSuccess(`Order placed! Total: Rs.${res.data.totalPrice}`);
@@ -111,6 +131,12 @@ function ProductDetail() {
 
         <p style={{ color: 'var(--forest)', marginTop: '1rem' }}>
           {product.farmerId?.name || 'Unknown farmer'} . {product.farmerId?.location || '—'}
+          {farmerRating && farmerRating.count > 0 && (
+            <span style={{ marginLeft: '0.5rem', color: 'var(--turmeric)' }}>
+              {'★'.repeat(Math.round(farmerRating.average))}{'☆'.repeat(5 - Math.round(farmerRating.average))}
+              {' '}({farmerRating.average}, {farmerRating.count} review{farmerRating.count !== 1 ? 's' : ''})
+            </span>
+          )}
         </p>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '1.5rem' }}>
@@ -122,6 +148,18 @@ function ProductDetail() {
             max={product.quantity}
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
+          />
+        </div>
+
+        <div style={{ marginTop: '1rem' }}>
+          <label className="form-label">Delivery address</label>
+          <textarea
+            className="form-input"
+            rows="2"
+            value={deliveryAddress}
+            onChange={(e) => setDeliveryAddress(e.target.value)}
+            placeholder="House/flat, street, city, pincode"
+            style={{ resize: 'vertical', fontFamily: 'Inter, sans-serif' }}
           />
         </div>
 

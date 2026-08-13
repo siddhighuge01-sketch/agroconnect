@@ -26,14 +26,18 @@ async function handleReferralCredit(buyerId) {
   }
 }
 
-// CREATE an order — supports optional coupon code
+// CREATE an order — supports optional coupon code + requires delivery address
 router.post('/', authMiddleware, async (req, res) => {
   try {
     if (req.user.role !== 'buyer') {
       return res.status(403).json({ error: 'Only buyers can place orders' });
     }
 
-    const { productId, quantity, couponCode } = req.body;
+    const { productId, quantity, couponCode, deliveryAddress } = req.body;
+
+    if (!deliveryAddress || deliveryAddress.trim().length < 10) {
+      return res.status(400).json({ error: 'Please provide a valid delivery address' });
+    }
 
     const product = await Product.findById(productId);
     if (!product) {
@@ -79,7 +83,8 @@ router.post('/', authMiddleware, async (req, res) => {
       commission,
       commissionRate,
       couponCode: appliedCode,
-      discountAmount
+      discountAmount,
+      deliveryAddress
     });
 
     await order.save();

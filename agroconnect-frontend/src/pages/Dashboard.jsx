@@ -217,9 +217,60 @@ function AddProduct({ onAdded }) {
   );
 }
 
+function RateOrderForm({ order, onDone }) {
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  const submit = async () => {
+    setSubmitting(true);
+    setError('');
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post('http://localhost:5000/api/reviews',
+        { orderId: order._id, rating, comment },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      onDone();
+    } catch (err) {
+      setError(err.response?.data?.error || 'Could not submit review');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div style={{ marginTop: '0.5rem', padding: '0.75rem', background: 'var(--paper)', borderRadius: '8px' }}>
+      <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.5rem' }}>
+        {[1, 2, 3, 4, 5].map(n => (
+          <span
+            key={n}
+            onClick={() => setRating(n)}
+            style={{ cursor: 'pointer', fontSize: '1.3rem', color: n <= rating ? 'var(--turmeric)' : '#ccc' }}
+          >★</span>
+        ))}
+      </div>
+      <textarea
+        className="form-input"
+        rows="2"
+        placeholder="Optional comment..."
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        style={{ resize: 'vertical' }}
+      />
+      <button className="btn-primary" style={{ marginTop: '0.5rem', padding: '6px 14px' }} onClick={submit} disabled={submitting}>
+        {submitting ? 'Submitting...' : 'Submit review'}
+      </button>
+      {error && <p className="error-stamp">⚠ {error}</p>}
+    </div>
+  );
+}
+
 function MyOrders({ role }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [ratingOrderId, setRatingOrderId] = useState(null);
 
   const fetchOrders = () => {
     const token = localStorage.getItem('token');
@@ -271,36 +322,56 @@ function MyOrders({ role }) {
   return (
     <div>
       {orders.map(o => (
-        <div className="listing-row" key={o._id}>
-          <div>
-            <strong style={{ color: 'var(--forest)' }}>{o.productId?.name || 'Product'}</strong>
-            <span style={{ color: 'var(--soil)', marginLeft: '0.75rem', fontSize: '0.9rem' }}>
-              Qty {o.quantity} . Rs.{o.totalPrice}
-              {o.discountAmount > 0 && ` (Rs.${o.discountAmount} off with ${o.couponCode})`}
-              {role === 'farmer' && ` . Commission Rs.${o.commission.toFixed(2)}`}
-            </span>
-          </div>
-
-          {role === 'farmer' ? (
-            <select
-              className="status-select"
-              value={o.status}
-              onChange={(e) => handleStatusChange(o._id, e.target.value)}
-            >
-              <option value="pending">pending</option>
-              <option value="confirmed">confirmed</option>
-              <option value="out_for_delivery">out for delivery</option>
-              <option value="delivered">delivered</option>
-            </select>
-          ) : (
-            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-              <span className={`status-badge status-${o.status}`}>{o.status.replace(/_/g, ' ')}</span>
-              {o.status === 'pending' && (
-                <button onClick={() => handleCancel(o._id)} style={{ background: 'none', border: 'none', color: 'var(--chili)', cursor: 'pointer', fontSize: '0.8rem' }}>
-                  Cancel
-                </button>
+        <div className="listing-row" key={o._id} style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <div>
+              <strong style={{ color: 'var(--forest)' }}>{o.productId?.name || 'Product'}</strong>
+              <span style={{ color: 'var(--soil)', marginLeft: '0.75rem', fontSize: '0.9rem' }}>
+                Qty {o.quantity} . Rs.{o.totalPrice}
+                {o.discountAmount > 0 && ` (Rs.${o.discountAmount} off with ${o.couponCode})`}
+                {role === 'farmer' && ` . Commission Rs.${o.commission.toFixed(2)}`}
+              </span>
+              {role === 'farmer' && o.deliveryAddress && (
+                <div style={{ fontSize: '0.8rem', color: 'var(--soil)', marginTop: '0.25rem' }}>
+                  📍 {o.deliveryAddress}
+                </div>
               )}
             </div>
+
+            {role === 'farmer' ? (
+              <select
+                className="status-select"
+                value={o.status}
+                onChange={(e) => handleStatusChange(o._id, e.target.value)}
+              >
+                <option value="pending">pending</option>
+                <option value="confirmed">confirmed</option>
+                <option value="out_for_delivery">out for delivery</option>
+                <option value="delivered">delivered</option>
+              </select>
+            ) : (
+              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                <span className={`status-badge status-${o.status}`}>{o.status.replace(/_/g, ' ')}</span>
+                {o.status === 'pending' && (
+                  <button onClick={() => handleCancel(o._id)} style={{ background: 'none', border: 'none', color: 'var(--chili)', cursor: 'pointer', fontSize: '0.8rem' }}>
+                    Cancel
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {role === 'buyer' && o.status === 'delivered' && !o.reviewed && (
+            ratingOrderId === o._id ? (
+              <RateOrderForm order={o} onDone={() => { setRatingOrderId(null); fetchOrders(); }} />
+            ) : (
+              <button
+                onClick={() => setRatingOrderId(o._id)}
+                style={{ background: 'none', border: 'none', color: 'var(--leaf)', cursor: 'pointer', fontSize: '0.8rem', alignSelf: 'flex-start', marginTop: '0.4rem' }}
+              >
+                Rate this order
+              </button>
+            )
           )}
         </div>
       ))}

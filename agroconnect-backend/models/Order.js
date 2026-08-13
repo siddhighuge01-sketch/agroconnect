@@ -11,6 +11,8 @@ const orderSchema = new mongoose.Schema({
   couponCode: { type: String, default: null },
   discountAmount: { type: Number, default: 0 },
   reminderSent: { type: Boolean, default: false },
+  deliveryAddress: { type: String, required: true },
+  reviewed: { type: Boolean, default: false },
   status: {
     type: String,
     enum: ['pending', 'confirmed', 'out_for_delivery', 'delivered', 'cancelled'],
