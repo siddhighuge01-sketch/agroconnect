@@ -3,7 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const User = require('../models/User');
+const User = require('../models/user');
 
 function generateReferralCode(name) {
   const prefix = name.replace(/\s+/g, '').slice(0, 4).toUpperCase();
